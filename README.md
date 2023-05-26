@@ -122,3 +122,4 @@ Options:
 - nest generate class className / nest g cl className 生成一个类
 - nest generate controller controllerName / nest g co controllerName 生成一个控制器 (controller b 会在 b 文件夹下创建)
 - nest generate service serviceName / nest g s serviceName 生成一个服务 service (b 会在 b 文件夹下创建)
+- nest generate resource resourceName / nest g res resourceName 快捷生成 controller/ service
