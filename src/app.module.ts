@@ -5,10 +5,12 @@ import { ModuleAModule } from './module-a/module-a.module';
 import { ModuleBModule } from './module-b/module-b.module';
 import { BController } from './b/b/b.controller';
 import { BController as BController1 } from './b/b.controller';
+import { BService } from './b/b.service';
+import { TestbService } from './testb/testb.service';
 
 @Module({
   imports: [ModuleAModule, ModuleBModule],
   controllers: [AppController, BController, BController1],
-  providers: [AppService],
+  providers: [AppService, BService, TestbService],
 })
 export class AppModule {}
