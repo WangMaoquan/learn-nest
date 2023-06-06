@@ -204,17 +204,17 @@ test1Module application bootstrap
 
 应用销毁的时候也同样有生命周期
 
-先调用每个模块的 `controller、provider` 的 `onModuleDestroy` 方法，然后调用 `Module` 的 `onModuleDestroy` 方法
+先调用每个模块的 `controller、provider` 的 `onModuleDestroy` 方法, 然后调用 `Module` 的 `onModuleDestroy` 方法
 
-之后再调用每个模块的 `controller、provider` 的 `beforeApplicationShutdown` 方法，然后调用 `Module` 的 `beforeApplicationShutdown` 方法
+之后再调用每个模块的 `controller、provider` 的 `beforeApplicationShutdown` 方法, 然后调用 `Module` 的 `beforeApplicationShutdown` 方法
 
 然后停止监听网络端口
 
-之后调用每个模块的 `controller、provider` 的 `onApplicationShutdown` 方法，然后调用 `Module` 的 `onApplicationShutdown` 方法
+之后调用每个模块的 `controller、provider` 的 `onApplicationShutdown` 方法, 然后调用 `Module` 的 `onApplicationShutdown` 方法
 
-beforeApplicationShutdown 是可以拿到 signal 系统信号的，比如 SIGTERM
+beforeApplicationShutdown 是可以拿到 signal 系统信号的, 比如 SIGTERM
 
-这些终止信号是别的进程传过来的，让它做一些销毁的事情，比如用 k8s 管理容器的时候，可以通过这个信号来通知它
+这些终止信号是别的进程传过来的, 让它做一些销毁的事情, 比如用 k8s 管理容器的时候, 可以通过这个信号来通知它
 
 下面是打印顺序:
 
@@ -244,3 +244,218 @@ test1Module application shutdown undefined
 `moduleRef` 就是当前模块的对象
 
 通过 `moduleRef` 取出一些 `provider` 来销毁
+
+### AOP
+
+AOP(Aspect Oriented Programming) 即面向切面编程
+
+AOP 的好处是可以把一些通用逻辑分离到切面中, 保持业务逻辑的纯粹性, 这样切面逻辑可以复用, 还可以动态的增删
+
+Nest 实现 AOP 的方式更多, 一共有五种
+
+1. Middleware
+2. Guard
+3. Pipe
+4. Interceptor
+5. ExceptionFilter
+
+#### 中间件 middleware
+
+Nest 的底层是 Express, 所以自然也可以使用中间件, 但是做了进一步的细分, 分为了全局中间件和路由中间件
+
+**全局中间件**
+
+```TypeScript
+const app = await NestFactory.create(AppModule);
+app.use(logger); // 这里的 logger 就是全局中间件
+```
+
+**路由中间件**
+顾名思义只是针对一部分路由来说的
+
+```TypeScript
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(loggerMiddleware).forRoutes('cats')
+  }
+}
+```
+
+#### Guard
+
+Guard 是路由守卫的意思, 可以用于在调用某个 Controller 之前判断权限, 返回 true 或者 false 来决定是否放行
+
+```TypeScript
+@Injectable()
+export class RolesGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean | Promise<Boolean> | Observable<Boolean> {
+    return true;
+  }
+}
+```
+
+Guard 要实现 `CanActivate` 接口, 实现 `canActivate` 方法, 可以从 `context` 拿到请求的信息, 然后做一些`权限验证等处理之后`返回 true 或者 false
+
+```TypeScript
+@UseGuards(RolesGuard) // 通过 @UseGuards 使用
+```
+
+当然也可以**全局使用**
+
+```TypeScript
+app.useGlobalGuards(new RolesGuard())
+```
+
+Guard 可以抽离路由的访问控制逻辑, 但是不能对请求、响应做修改, 这种逻辑可以使用 Interceptor
+
+#### Interceptor
+
+Interceptor 是拦截器的意思, 可以在目标 Controller 方法前后加入一些逻辑
+
+nterceptor 要实现 NestInterceptor 接口, 实现 intercept 方法, 调用 next.handle() 就会调用目标 Controller, 可以在之前和之后加入一些处理逻辑
+
+```TypeScript
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  interceptor(context: ExecutionContext, next: CallHandler): Observable<any> {
+    console.log('before....');
+    return next.handler().pipe(
+      tap(() => console.log('after ....'))
+    )
+  }
+}
+```
+
+**局部使用**
+
+```TypeScript
+@useInterceptors(LoggingInterceptor)
+```
+
+**全局使用**
+
+```TypeScript
+app.useGlobalInterceptors(new LoggingInterceptor())
+```
+
+#### Pipe
+
+除了路由的权限控制、目标 Controller 之前之后的处理这些都是通用逻辑外, 对参数的处理也是一个通用的逻辑, 所以 Nest 也抽出了对应的切面, 也就是 Pipe
+
+Pipe 是管道的意思, 用来对参数做一些检验和转换
+
+Pipe 要实现 PipeTransform 接口, 实现 transform 方法, 里面可以对传入的参数值 value 做参数验证, 比如格式、类型是否正确, 不正确就抛出异常。也可以做转换, 返回转换后的值
+
+```TypeScript
+@Injectable()
+export class ValidationPipe implements PipeTransform {
+  transform(value: any, metadata: ArgumentsMetadata) {
+    return value
+  }
+}
+```
+
+内置的有 9 个 Pipe
+
+1. ValidationPipe
+2. ParseIntPipe
+3. ParseBoolPipe
+4. ParseArrayPipe
+5. ParseUUIDPipe
+6. DefaultValuePipe
+7. ParseEnumPipe
+8. ParseFloatPipe
+9. ParseFilePipe
+
+Pipe 可以只对`某个参数`生效, `某个路由`生效, 也可以对`每个路由`都生效
+
+**某个参数**
+
+```TypeScript
+@Get()
+hello(@Param('aaa', ParseIntPipe), aaa: number) {}
+```
+
+**某个路由**
+
+```TypeScript
+@Post()
+@usePipes(ValidationPipe)
+```
+
+**全局**
+
+```TypeScript
+app.useGlobalPipes(new ValidationPipe())
+```
+
+#### ExceptionFilter
+
+ExceptionFilter 可以对抛出的异常做处理, 返回对应的响应：
+
+首先要实现 ExceptionFilter 接口, 实现 catch 方法, 就可以拦截异常了, 但是要拦截什么异常还需要用 @Catch 装饰器来声明, 拦截了异常之后, 可以返回对应的响应, 给用户更友好的提示
+
+```TypeScript
+@Catch(HttpExecption)
+export class HttpExecptionFilter implements ExceptionFilter {
+  catch(exception: HttpExecption, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const respose = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+    const status = exception.getStatus();
+    respose.status(status).json({
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url
+    })
+  }
+}
+```
+
+Nest 内置了很多 http 相关的异常, 都是 HttpException 的子类
+
+1. BadRequestException
+2. UnauthorizedException
+3. NotFoundException
+4. ForbiddenException
+5. NotAcceptableException
+6. RequestTimeoutException
+7. ConflictException
+8. GoneException
+9. PayloadTooLargeException
+10. UnsupportedMediaTypeException
+11. UnprocessableException
+12. InternalServerErrorException
+13. NotImplementedException
+14. BadGatewayException
+15. ServiceUnavailableException
+16. GatewayTimeoutException
+
+还可以自己扩展
+
+```TypeScript
+export class ForbiddenException implements HttpException {
+  constructor() {
+    super('Forbidden', HttpStatus.FORBIDDEN)
+  }
+}
+```
+
+Nest 通过这样的方式实现了异常到响应的对应关系, 代码里只要抛出不同的异常, 就会返回对应的响应, 很方便
+
+**局部生效**
+
+```TypeScript
+@Post()
+@useFilters(new ForbiddenException())
+```
+
+**全局生效**
+
+```TypeScript
+app.useGlobalFilters(new ForbiddenException())
+```
+
+#### 调用顺序
+
+Middleware(最外层) =>Guard(判断路由有没有权限访问) =>ExceptionFilter(异常都会被 ExceptionFilter 处理, 返回不同的响应) =>Interceptor(Contoller 前后扩展一些逻辑) =>Pipe(对参数做检验和转换)
