@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Test1Service } from './test1.service';
 import { Test1Controller } from './test1.controller';
+import { ModuleRef } from '@nestjs/core';
 
 @Module({
   controllers: [Test1Controller],
@@ -21,6 +22,8 @@ export class Test1Module
     BeforeApplicationShutdown,
     OnApplicationShutdown
 {
+  constructor(private moduleRef: ModuleRef) {}
+
   onModuleInit() {
     console.log('test1Module module init');
   }
@@ -37,6 +40,8 @@ export class Test1Module
   }
 
   onApplicationShutdown(signal?: string) {
+    const test1Service = this.moduleRef.get(Test1Service);
+    console.log('-------------------------------', test1Service.findAll());
     console.log('test1Module application shutdown', signal);
   }
 }
