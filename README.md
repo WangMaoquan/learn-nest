@@ -178,3 +178,23 @@ Nest 在启动的时候, 会递归解析 `Module` 依赖, 扫描其中的 `provi
 首先, 递归初始化模块, 会依次调用模块内的 `controller、provider` 的 `onModuleInit` 方法, 然后再调用 `module` 的 `onModuleInit` 方法
 
 全部初始化完之后, 再依次调用模块内的 `controller、provider` 的 `onApplicationBootstrap` 方法, 然后调用 `module` 的 `onApplicationBootstrap` 方法
+
+应用销毁的时候也同样有生命周期
+
+先调用每个模块的 `controller、provider` 的 `onModuleDestroy` 方法，然后调用 `Module` 的 `onModuleDestroy` 方法
+
+之后再调用每个模块的 `controller、provider` 的 `beforeApplicationShutdown` 方法，然后调用 `Module` 的 `beforeApplicationShutdown` 方法
+
+然后停止监听网络端口
+
+之后调用每个模块的 `controller、provider` 的 `onApplicationShutdown` 方法，然后调用 `Module` 的 `onApplicationShutdown` 方法
+
+beforeApplicationShutdown 是可以拿到 signal 系统信号的，比如 SIGTERM
+
+这些终止信号是别的进程传过来的，让它做一些销毁的事情，比如用 k8s 管理容器的时候，可以通过这个信号来通知它
+
+### moduleRef
+
+`moduleRef` 就是当前模块的对象
+
+通过 `moduleRef` 取出一些 `provider` 来销毁
