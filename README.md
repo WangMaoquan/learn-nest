@@ -164,3 +164,17 @@ const controller = new Controller(service);
 这样不就完成了自动的对象创建和组装么？
 
 这种依赖注入的方式叫做 `Dependency Injection`, 简称 `DI`
+
+### 全局模块
+
+使用 `@Global()` 声明全局模块
+
+不过全局模块还是尽量少用, 不然注入的很多 `provider` 都不知道来源, 会降低代码的可维护性
+
+### 生命周期
+
+Nest 在启动的时候, 会递归解析 `Module` 依赖, 扫描其中的 `provider、controller`, 注入它的依赖, 全部解析完后, 会监听网络端口, 开始处理请求
+
+首先, 递归初始化模块, 会依次调用模块内的 `controller、provider` 的 `onModuleInit` 方法, 然后再调用 `module` 的 `onModuleInit` 方法
+
+全部初始化完之后, 再依次调用模块内的 `controller、provider` 的 `onApplicationBootstrap` 方法, 然后调用 `module` 的 `onApplicationBootstrap` 方法
