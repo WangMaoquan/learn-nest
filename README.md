@@ -171,6 +171,12 @@ const controller = new Controller(service);
 
 不过全局模块还是尽量少用, 不然注入的很多 `provider` 都不知道来源, 会降低代码的可维护性
 
+### 全局模块
+
+使用 `@Global()` 声明全局模块
+
+不过全局模块还是尽量少用, 不然注入的很多 `provider` 都不知道来源, 会降低代码的可维护性
+
 ### 生命周期
 
 Nest 在启动的时候, 会递归解析 `Module` 依赖, 扫描其中的 `provider、controller`, 注入它的依赖, 全部解析完后, 会监听网络端口, 开始处理请求
@@ -178,6 +184,23 @@ Nest 在启动的时候, 会递归解析 `Module` 依赖, 扫描其中的 `provi
 首先, 递归初始化模块, 会依次调用模块内的 `controller、provider` 的 `onModuleInit` 方法, 然后再调用 `module` 的 `onModuleInit` 方法
 
 全部初始化完之后, 再依次调用模块内的 `controller、provider` 的 `onApplicationBootstrap` 方法, 然后调用 `module` 的 `onApplicationBootstrap` 方法
+
+下面是打印顺序:
+
+```shell
+test2Controller module init
+test2Service module init
+test2Module module init
+test1Controller module init
+test1Service module init
+test1Module module init
+test2Controller application bootstrap
+test2Service application bootstrap
+test2Module application bootstrap
+test1Controller application bootstrap
+test1Service application bootstrap
+test1Module application bootstrap
+```
 
 应用销毁的时候也同样有生命周期
 
@@ -192,6 +215,29 @@ Nest 在启动的时候, 会递归解析 `Module` 依赖, 扫描其中的 `provi
 beforeApplicationShutdown 是可以拿到 signal 系统信号的，比如 SIGTERM
 
 这些终止信号是别的进程传过来的，让它做一些销毁的事情，比如用 k8s 管理容器的时候，可以通过这个信号来通知它
+
+下面是打印顺序:
+
+```shell
+test2Controller module destroy
+test2Service module destroy
+test2Module module destroy
+test1Controller module destroy
+test1Service module destroy
+test1Module module destroy
+test2Controller before application shutdown undefined
+test2Service before application shutdown undefined
+test2Module before application shutdown undefined
+test1Controller before application shutdown undefined
+test1Service before application shutdown undefined
+test1Module before application shutdown undefined
+test2Controller application shutdown undefined
+test2Service application shutdown undefined
+test2Module application shutdown undefined
+test1Controller application shutdown undefined
+test1Service application shutdown undefined
+test1Module application shutdown undefined
+```
 
 ### moduleRef
 
