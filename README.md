@@ -34,7 +34,7 @@ Options:
   -h, --help            Output usage information.
 ```
 
-#### 启动开发服务，支持 watch 和调试
+#### 启动开发服务, 支持 watch 和调试
 
 ```shell
 start [options] [app] Run Nest application.
@@ -122,3 +122,45 @@ Options:
 - nest generate class className / nest g cl className 生成一个类
 - nest generate controller controllerName / nest g co controllerName 生成一个控制器
 - nest generate service serviceName / nest g s serviceName 生成一个服务
+
+### IOC
+
+IOC 就是 Inverse Of Control 即 控制反转
+
+后端系统中会存在很多对象
+
+- Controller 对象: 接收 http 请求, 调用 Service 返回响应
+- Service 对象: 实现业务逻辑
+- Repository 对象: 实现对数据库的增删改查
+
+还有数据库链接对象 DataSource, 配置对象 Config 等等
+
+> 有着以下一样的关系
+>
+> Controller 依赖了 Service 实现业务逻辑, Service 依赖了 Repository 来做增删改查, Repository 依赖 DataSource 来建立连接, DataSource 又需要从 Config 对象拿到用户名密码等信息
+
+```JavaScript
+const config = new Config({ username: 'xxx', password: 'xxx'});
+
+const dataSource = new DataSource(config);
+
+const repository = new Repository(dataSource);
+
+const service = new Service(repository);
+
+const controller = new Controller(service);
+```
+
+每次使用 Controller 都要 new 一堆对象
+
+在应用初始化的时候, 需要理清依赖的先后关系, 创建一大堆对象组合起来
+
+> 解决上面这种 当我们使用 Controller 时, 避免我们特地的去 new 一堆 初始化的操作, 交给工具去分析, 然后按照先后顺序创建并组装好, 这就是 IOC
+
+它有一个放对象的容器, 程序初始化的时候会扫描 class 上声明的依赖关系, 然后把这些 class 都给 new 一个实例放到容器里。
+
+创建对象的时候, 还会把它们依赖的对象注入进去。
+
+这样不就完成了自动的对象创建和组装么？
+
+这种依赖注入的方式叫做 `Dependency Injection`, 简称 `DI`
