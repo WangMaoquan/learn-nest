@@ -5,7 +5,7 @@ import { TestProviderService } from './test-provider/test-provider.service';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
-  @Inject(TestProviderService)
+  @Inject('test-provider-service')
   private readonly tPS: TestProviderService;
 
   @Get()
