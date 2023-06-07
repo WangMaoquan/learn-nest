@@ -5,6 +5,15 @@ import { AppService } from './app.service';
 @Module({
   imports: [],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: 'decade',
+      useValue: {
+        name: 'decade',
+        age: 20,
+      },
+    },
+  ],
 })
 export class AppModule {}
