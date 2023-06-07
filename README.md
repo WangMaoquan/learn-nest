@@ -531,3 +531,64 @@ export class DddService {
   }
 }
 ```
+
+### 动态模块 dynamic module
+
+有的时候我们希望 `import` 的时候给这个模块传一些参数, 动态生成模块的内容
+
+通过 类上的 静态方法 `register`
+
+```TypeScript
+@Module({})
+export class DynamicModuleModule {
+  static register(options: Record<string, any>): DynamicModule {
+    return {
+      module: DynamicModuleModule,
+      controllers: [DynamicModuleController],
+      providers: [
+        DynamicModuleService,
+        {
+          provide: 'config_options',
+          useValue: options,
+        },
+      ],
+    };
+  }
+}
+```
+
+这里的 `register` 方法其实叫啥都行, 但 nest 约定了 3 种方法名
+
+1. register
+2. forRoot
+3. forFeature
+4. registerAsync
+5. forRootAsync
+6. forFeatureAsync
+
+我们约定它们分别用来做不同的事情：
+
+- register 用一次模块传一次配置
+- forRoot 配置一次模块用多次
+- forFeature 用了 forRoot 固定了整体模块, 用于局部的时候, 可能需要再传一些配置, 比如用 forRoot 指定了数据库链接信息, 再用 forFeature 指定某个模块访问哪个数据库和表
+
+`Nest` 还提供了另一种方式来创建动态模块
+
+**ConfigurableModuleBuilder**
+
+module-builder.ts
+
+```TypeScript
+import { ConfigurableModuleBuilder } from '@nestjs/common';
+
+export interface ModuleBuilderOptions {
+  age: number;
+  name: string;
+}
+
+export const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN } =
+  new ConfigurableModuleBuilder<ModuleBuilderOptions>().build();
+
+```
+
+通过 `setClassMethodName` 设置方法名, 通过 `setExtras` 设置额外的 `options` 处理逻辑
