@@ -459,3 +459,39 @@ app.useGlobalFilters(new ForbiddenException())
 #### 调用顺序
 
 Middleware(最外层) =>Guard(判断路由有没有权限访问) =>ExceptionFilter(异常都会被 ExceptionFilter 处理, 返回不同的响应) =>Interceptor(Contoller 前后扩展一些逻辑) =>Pipe(对参数做检验和转换)
+
+### 装饰器
+
+- @Module({}) 申明模块用的
+- @Controller() 申明 Controller
+- @Injectable() 申明 provider(任何的 class)
+- @Inject(xxx) 属性注入 (xxx 代表对应的 token)
+- @Optional() 指明属性可选
+- @Global() 申明全局
+- @Catch(xxxx) 申明一个自定义的 ExceptionFilter
+- @UseFilters(xxx) 在 handler 上使用 xxx ExceptionFilter
+- @UseGuards(xxx) 在 handler 上使用 xxx Guard
+- @UseInterceptors(xxx) 在 handler 上使用 xxx Interceptor
+- @UsePipes(xxx) 在 handler 上使用 xxx Pipe
+- @Param('xxx', xxxPipe) 使用 xxxPipe 校验 xxx 属性对应的值, `@Param` 是获取路径中的参数 `/xxx/111` 中的 111
+- @Query('xxx', xxxPipe) 使用 xxxPipe 校验 xxx 属性对应的值, `@Query` 是获取 `url?=` 后面的参数 `?b=1`
+- @Post('xxx') 接收 Post 请求
+- @Body() 获取 Post 请求 body 部分的参数
+- @Get() 接收 get 请求
+- @Put() 接收 put 请求
+- @Delete() 接收 delete 请求
+- @Patch() 接收 patch 请求
+- @Head() 接收 Head 请求
+- @Options() 接收 options 请求
+- @SetMetadata 为 `handler` 和 `class` 指定 `metadata`, 然后在 `guard` 或者 `interceptor` 里取出来
+- @Headers(key) 装饰器取某个请求头 或者全部请求头
+- @Ip 拿到 ip
+- @Session 拿到 session 对象
+- @HostParam
+- 通过 @Req 或者 @Request 装饰器 拿到 `request` 对象
+- @Res 或者 @Response 拿到 response 对象, 需要自己手动 end 一下, 或者 指定参数 passthrough: true 这样才会响应
+- @Next 有两个 handler 来处理同一个路由的时候, 可以在第一个 handler 里注入 next, 调用它来把请求转发到第二个 handler
+- @HttpCode 修改默认的 handler 的状态码
+- @Header 修改响应头
+- @Redirect 重定向
+- @Render 返回的响应内容指定渲染引擎
