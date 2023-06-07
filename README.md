@@ -495,3 +495,12 @@ Middleware(最外层) =>Guard(判断路由有没有权限访问) =>ExceptionFilt
 - @Header 修改响应头
 - @Redirect 重定向
 - @Render 返回的响应内容指定渲染引擎
+
+### Reflect 与 Metadata
+
+还在[草案](https://rbuckton.github.io/reflect-metadata/)当中
+
+Nest 的装饰器的实现原理就是 `Reflect.getMetadata`、`Reflect.defineMetadata` 这些 api
+通过在 `class`、`method` 上添加 `metadata`, 然后扫描到它的时候取出 `metadata` 来做相应的处理来完成各种功能
+
+实例化对象还需要构造器参数的类型, 这个开启 ts 的 `emitDecoratorMetadata` 的编译选项之后, ts 就会自动添加一些元数据, 也就是 `design:type`、`design:paramtypes`、`design:returntype` 这三个, 分别代表被装饰的`目标的类型`、`参数的类型`、`返回值的类型`
