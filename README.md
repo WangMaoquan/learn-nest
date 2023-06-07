@@ -592,3 +592,36 @@ export const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN } =
 ```
 
 通过 `setClassMethodName` 设置方法名, 通过 `setExtras` 设置额外的 `options` 处理逻辑
+
+### middleware
+
+创建一个 middleware
+
+```TypeScript
+export class TestMiddlewareMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: () => void) {
+    console.log('before');
+    next();
+    console.log('after');
+  }
+}
+```
+
+在 `app.controller` 中使用
+
+```TypeScript
+export class AppController implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TestMiddlewareMiddleware).forRoutes('*'); // 这样表示匹配所有路由
+    consumer.apply(TestMiddlewareMiddleware).forRoutes({
+      path: 'hello*', method: RequestMethod.Get
+    }) // 对 hello 开头的路由且是get方法
+  }
+}
+```
+
+`middleware` 和 `interceptor` 功能类似, 但也有不同:
+
+`interceptor` 可以拿到目标 class、handler 等, 也可以调用 rxjs 的 operator 来处理响应, 更适合处理具体的业务逻辑
+
+`middleware` 更适合处理通用的逻辑
