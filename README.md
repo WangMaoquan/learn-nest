@@ -592,3 +592,21 @@ export const { ConfigurableModuleClass, MODULE_OPTIONS_TOKEN } =
 ```
 
 通过 `setClassMethodName` 设置方法名, 通过 `setExtras` 设置额外的 `options` 处理逻辑
+
+### Pipe
+
+Pipe 是在参数传给 handler 之前做一些验证和转换的, 有 9 个内置的 Pipe 可以直接用
+
+- ParseIntPipe
+- ParseBoolPipe
+- ParseEnumPipe
+- ParseArrayPipe
+- ParseFloatPipe
+- ParseFilePipe
+- ParseUUIDPipe
+- DefaultValuePipe
+- ValidationPipe
+
+自己写一个 pipe 也很简单, 就是实现 PipeTransform 接口的 transform 方法, 它的返回值就是传给 handler 的值
+
+在 pipe 里可以拿到装饰器和 handler 参数的各种信息(metadata), 基于这些来实现校验和转换就是很简单的事情了
