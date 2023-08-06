@@ -29,6 +29,34 @@ CMD ["http-server", "-p", "8080"]
 `docker build -t 镜像名:标签 -f DockerfileName .` -f 指定 Dockerfile 文件
 
 
+### .dockerignore
+
+通过 `.dockerignore` 声明哪些不需要发送给 docker daemon 构建
+
+```
+*.md
+!README.md
+node_modules/
+[a-c].txt
+.git/
+.DS_Store
+.vscode/
+.dockerignore
+.eslintignore
+.eslintrc
+.prettierrc
+.prettierignore
+# 这是一个注释
+```
+
+- *.md 就是忽略所有 md 结尾的文件，然后 !README.md 就是其中不包括 README.md
+- node_modules/ 就是忽略 node_modules 下 的所有文件
+- [a-c].txt 是忽略 a.txt、b.txt、c.txt 这三个文件
+- .DS_Store 是 mac 的用于指定目录的图标、背景、字体大小的配置文件，这个一般都要忽略
+- eslint、prettier 的配置文件在构建镜像的时候也用不到
+
+`docker build` 时，会先解析 `.dockerignore`, 把该忽略的文件忽略掉, 然后把剩余文件打包发送给 docker daemon 作为上下文来构建产生镜像
+
 ### 总结
 
 docker 镜像是通过 dockerfile 构建出来的。
