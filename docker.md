@@ -57,6 +57,55 @@ node_modules/
 
 `docker build` 时，会先解析 `.dockerignore`, 把该忽略的文件忽略掉, 然后把剩余文件打包发送给 docker daemon 作为上下文来构建产生镜像
 
+### 多阶段构建
+
+基于前一次的构建的基础上再进行构建, 不需要使用多个 Dockerfile, 只需要一个 Dockerfile
+
+```docker
+# build stage
+FROM node:18 as build-stage
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm config set registry https://registry.npmmirror.com/
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# production stage
+FROM node:18 as production-stage
+
+COPY --from=build-stage /app/dist /app
+COPY --from=build-stage /app/package.json /app/package.json
+
+WORKDIR /app
+
+RUN npm install --production
+
+EXPOSE 3000
+
+CMD ["node", "/app/main.js"]
+```
+
+通过 FROM 继承镜像的时候，给当前镜像指定一个名字，比如 build-stage。
+
+然后第一个镜像执行 build。
+
+之后再通过 FROM 继承 node 镜像创建一个新镜像。
+
+通过 COPY --from-build-stage 从那个镜像内复制 /app/dist 的文件到当前镜像的 /app 下。
+
+还要把 package.json 也复制过来，然后切到 /app 目录执行 npm install --production 只安装 dependencies 依赖
+
+这个生产阶段的镜像就指定容器跑起来执行 node /app/main.js 就好了。
+
+执行 docker build, 打上 second 标签：
+
 ### 总结
 
 docker 镜像是通过 dockerfile 构建出来的。
